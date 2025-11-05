@@ -34,7 +34,7 @@ app.get('/api/health', (req: Request, res: Response) => {
 // Serve frontend in production
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static('../dist'));
-  
+
   app.get('*', (req: Request, res: Response) => {
     res.sendFile('../dist/index.html');
   });

@@ -1,7 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-
-const authorizeRoles = (...roles: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+const authorizeRoles = (...roles) => {
+  return (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
@@ -16,4 +14,4 @@ const authorizeRoles = (...roles: string[]) => {
   };
 };
 
-export default authorizeRoles;
+module.exports = authorizeRoles;

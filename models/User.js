@@ -1,18 +1,7 @@
-import mongoose, { Document, Schema } from 'mongoose';
-import bcrypt from 'bcryptjs';
+const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 
-export interface IUser extends Document {
-  name: string;
-  email: string;
-  passwordHash: string;
-  role: 'admin' | 'teacher' | 'student';
-  assignedClasses?: mongoose.Types.ObjectId[]; // For teachers to have assigned classes
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword: (password: string) => Promise<boolean>;
-}
-
-const UserSchema: Schema = new Schema(
+const UserSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -47,22 +36,20 @@ const UserSchema: Schema = new Schema(
   }
 );
 
-UserSchema.pre<IUser>('save', async function (next) {
+UserSchema.pre('save', async function (next) {
   if (!this.isModified('passwordHash')) return next();
 
   try {
     const salt = await bcrypt.genSalt(10);
     this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
     next();
-  } catch (error: any) {
+  } catch (error) {
     next(error);
   }
 });
 
-UserSchema.methods.comparePassword = async function (
-  password: string
-): Promise<boolean> {
+UserSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.passwordHash);
 };
 
-export default mongoose.model<IUser>('User', UserSchema);
+module.exports = mongoose.model('User', UserSchema);

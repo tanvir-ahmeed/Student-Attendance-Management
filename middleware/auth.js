@@ -1,25 +1,7 @@
-import jwt from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
-import User from '../models/User';
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
-}
-
-export interface JwtPayload {
-  id: string;
-  role: string;
-}
-
-const auth = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-): Promise<any> => {
+const auth = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
 
@@ -32,7 +14,7 @@ const auth = async (
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET || 'attendance_system_secret_key'
-    ) as JwtPayload;
+    );
     const user = await User.findById(decoded.id).select('-passwordHash');
 
     if (!user) {
@@ -46,4 +28,4 @@ const auth = async (
   }
 };
 
-export default auth;
+module.exports = auth;

@@ -1,15 +1,7 @@
-import mongoose, { Document, Schema } from 'mongoose';
-import StudentClass from './StudentClass';
+const mongoose = require('mongoose');
+const StudentClass = require('./StudentClass');
 
-export interface IClass extends Document {
-  name: string;
-  createdBy: mongoose.Types.ObjectId;
-  assignedTeacher?: mongoose.Types.ObjectId; // Reference to the assigned teacher
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const ClassSchema: Schema = new Schema(
+const ClassSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -37,4 +29,4 @@ ClassSchema.methods.getStudents = async function() {
   return studentClasses.map(sc => sc.studentId);
 };
 
-export default mongoose.model<IClass>('Class', ClassSchema);
+module.exports = mongoose.model('Class', ClassSchema);

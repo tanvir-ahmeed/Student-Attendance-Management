@@ -1,14 +1,6 @@
-import mongoose, { Document, Schema } from 'mongoose';
+const mongoose = require('mongoose');
 
-export interface IStudent extends Document {
-  name: string;
-  rollNumber: string;
-  email: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-const StudentSchema: Schema = new Schema(
+const StudentSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -32,4 +24,4 @@ const StudentSchema: Schema = new Schema(
   }
 );
 
-export default mongoose.model<IStudent>('Student', StudentSchema);
+module.exports = mongoose.model('Student', StudentSchema);
