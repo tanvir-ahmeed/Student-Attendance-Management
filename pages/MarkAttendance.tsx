@@ -221,9 +221,17 @@ const MarkAttendancePage: React.FC = () => {
             </h2>
             <div className="flex flex-wrap gap-2">
               <Button
+                variant="primary"
+                onClick={() => markAll('Present')}
+                disabled={studentsInClass.length === 0 || localLoading || isSaving}
+                size="sm"
+              >
+                Present All
+              </Button>
+              <Button
                 variant="secondary"
                 onClick={() => markAll('Present')}
-                disabled={studentsInClass.length === 0 || localLoading}
+                disabled={studentsInClass.length === 0 || localLoading || isSaving}
                 size="sm"
               >
                 Mark All Present
@@ -231,7 +239,7 @@ const MarkAttendancePage: React.FC = () => {
               <Button
                 variant="secondary"
                 onClick={() => markAll('Absent')}
-                disabled={studentsInClass.length === 0 || localLoading}
+                disabled={studentsInClass.length === 0 || localLoading || isSaving}
                 size="sm"
               >
                 Mark All Absent
@@ -276,6 +284,7 @@ const MarkAttendancePage: React.FC = () => {
                               onChange={() =>
                                 handleStatusChange(student.id, 'Present')
                               }
+                              disabled={isSaving}
                             />
                             <span className="ml-2 flex items-center">
                               <CheckSquareIcon className="h-5 w-5 text-green-500 mr-1" />
@@ -293,6 +302,7 @@ const MarkAttendancePage: React.FC = () => {
                               onChange={() =>
                                 handleStatusChange(student.id, 'Absent')
                               }
+                              disabled={isSaving}
                             />
                             <span className="ml-2 flex items-center">
                               <TrashIcon className="h-5 w-5 text-red-500 mr-1" />

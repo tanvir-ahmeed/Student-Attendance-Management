@@ -460,7 +460,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
               : ('absent' as 'present' | 'absent'),
         }));
 
-        const data = await api.markAttendance(
+        const response: api.AttendanceResponse = await api.markAttendance(
           token,
           classId,
           date,
@@ -468,7 +468,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         );
 
         // Convert API response to match existing types
-        const convertedData: AttendanceRecord[] = data.map(a => {
+        const convertedData: AttendanceRecord[] = response.savedRecords.map((a: any) => {
           // Handle classId - could be string or object
           let classId = '';
           if (a.classId) {
@@ -513,7 +513,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
           );
           return [...filteredPrev, ...convertedData];
         });
-      } catch (err) {
+        
+        // If there were errors, show them
+        if (response.errors && response.errors.length > 0) {
+          console.warn('Some attendance records had errors:', response.errors);
+        }
+      } catch (err: any) {
         handleError(err);
         throw err;
       } finally {

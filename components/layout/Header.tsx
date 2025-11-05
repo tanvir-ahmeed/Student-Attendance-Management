@@ -1,8 +1,9 @@
 import React from 'react';
 import { useData } from '../../contexts/DataContext';
 import { useNavigate } from 'react-router-dom';
+// Removed useTheme import
 import Button from '../ui/Button';
-import { UserIcon, LogOutIcon } from '../Icons';
+import { UserIcon, LogOutIcon } from '../Icons'; // Removed SunIcon and MoonIcon imports
 
 interface HeaderProps {
   sidebarCollapsed?: boolean;
@@ -10,6 +11,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ sidebarCollapsed = false }) => {
   const { user, logout } = useData();
+  // Removed theme and toggleTheme destructuring
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -29,6 +31,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarCollapsed = false }) => {
             <h1 className="text-xl font-bold text-gray-900">Attendance Pro</h1>
           </div>
           <div className="flex items-center space-x-4">
+            {/* Removed theme toggle button */}
             {user && (
               <div className="flex items-center space-x-3">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-indigo-100">

@@ -45,6 +45,12 @@ interface AttendanceRecord {
   updatedAt: string;
 }
 
+export interface AttendanceResponse {
+  message: string;
+  savedRecords: AttendanceRecord[];
+  errors: { studentId: string; error: string }[];
+}
+
 interface AttendanceSummary {
   studentId: string;
   studentName: string;
@@ -322,7 +328,7 @@ export const markAttendance = async (
   classId: string,
   date: string,
   records: { studentId: string; status: 'present' | 'absent' }[]
-): Promise<AttendanceRecord[]> => {
+): Promise<AttendanceResponse> => {
   const response = await fetch(`${API_BASE_URL}/attendance`, {
     method: 'POST',
     headers: {
@@ -336,7 +342,7 @@ export const markAttendance = async (
     throw new Error('Failed to mark attendance');
   }
 
-  return response.json() as Promise<AttendanceRecord[]>;
+  return response.json() as Promise<AttendanceResponse>;
 };
 
 export const getAttendanceSummary = async (

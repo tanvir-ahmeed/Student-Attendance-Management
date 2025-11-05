@@ -33,18 +33,18 @@ router.get('/', async (req: Request, res: Response) => {
   }
 });
 
-// @desc    Add attendance record
+// @desc    Add attendance records
 // @route   POST /api/attendance
 // @access  Private
 router.post('/', async (req: Request, res: Response) => {
   try {
-    const { classId, studentId, date, status } = req.body;
+    const { classId, date, records } = req.body;
 
     // Validation
-    if (!classId || !studentId || !date || !status) {
+    if (!classId || !date || !records || !Array.isArray(records)) {
       return res
         .status(400)
-        .json({ message: 'Please provide all required fields' });
+        .json({ message: 'Please provide all required fields: classId, date, and records array' });
     }
 
     // Check if class exists
@@ -53,52 +53,90 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Class not found' });
     }
 
-    // Check if student exists
-    const studentExists = await Student.findById(studentId);
-    if (!studentExists) {
-      return res.status(400).json({ message: 'Student not found' });
+    const savedRecords = [];
+    const errors = [];
+
+    // Process each record
+    for (const record of records) {
+      const { studentId, status } = record;
+
+      try {
+        // Validation for individual record
+        if (!studentId || !status) {
+          errors.push({ studentId, error: 'Missing studentId or status' });
+          continue;
+        }
+
+        // Check if student exists
+        const studentExists = await Student.findById(studentId);
+        if (!studentExists) {
+          errors.push({ studentId, error: 'Student not found' });
+          continue;
+        }
+
+        // Check if student is assigned to this class
+        const studentClassExists = await StudentClass.findOne({
+          studentId,
+          classId,
+        });
+        if (!studentClassExists) {
+          errors.push({ studentId, error: 'Student is not assigned to this class' });
+          continue;
+        }
+
+        // Check if attendance record already exists
+        const existingRecord = await Attendance.findOne({
+          classId,
+          studentId,
+          date: new Date(date),
+        });
+
+        if (existingRecord) {
+          // Update existing record
+          const updatedRecord = await Attendance.findByIdAndUpdate(
+            existingRecord._id,
+            { status },
+            { new: true }
+          );
+          
+          // Populate references
+          if (updatedRecord) {
+            const populatedRecord = await Attendance.findById(updatedRecord._id)
+              .populate('classId', 'name')
+              .populate('studentId', 'name rollNumber');
+              
+            savedRecords.push(populatedRecord);
+          } else {
+            savedRecords.push(null);
+          }
+        } else {
+          // Create new attendance record
+          const attendance = new Attendance({
+            classId,
+            studentId,
+            date: new Date(date),
+            status,
+          });
+
+          const savedAttendance = await attendance.save();
+
+          // Populate references
+          const populatedAttendance = await Attendance.findById(savedAttendance._id)
+            .populate('classId', 'name')
+            .populate('studentId', 'name rollNumber');
+
+          savedRecords.push(populatedAttendance);
+        }
+      } catch (recordError: any) {
+        errors.push({ studentId: record.studentId, error: recordError.message });
+      }
     }
 
-    // Check if student is assigned to this class
-    const studentClassExists = await StudentClass.findOne({
-      studentId,
-      classId,
+    res.status(201).json({
+      message: 'Attendance records processed',
+      savedRecords,
+      errors
     });
-    if (!studentClassExists) {
-      return res
-        .status(400)
-        .json({ message: 'Student is not assigned to this class' });
-    }
-
-    // Check if attendance record already exists
-    const existingRecord = await Attendance.findOne({
-      classId,
-      studentId,
-      date: new Date(date),
-    });
-
-    if (existingRecord) {
-      return res
-        .status(400)
-        .json({ message: 'Attendance record already exists for this student' });
-    }
-
-    // Create attendance record
-    const attendance = new Attendance({
-      classId,
-      studentId,
-      date: new Date(date),
-      status,
-    });
-
-    const savedAttendance = await attendance.save();
-
-    // Populate references
-    const populatedAttendance = await Attendance.findById(savedAttendance._id)
-      .populate('classId', 'name')
-      .populate('studentId', 'name rollNumber');
-
-    res.status(201).json(populatedAttendance);
   } catch (err: any) {
     console.error(err.message);
     res.status(500).json({ message: 'Server error' });

@@ -101,6 +101,18 @@ const User = mongoose.model('User', UserSchema);
 const Class = mongoose.model('Class', ClassSchema);
 const Student = mongoose.model('Student', StudentSchema);
 const Attendance = mongoose.model('Attendance', AttendanceSchema);
+const StudentClass = mongoose.model('StudentClass', new mongoose.Schema({
+  studentId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Student',
+    required: true,
+  },
+  classId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Class',
+    required: true,
+  },
+}, { timestamps: true }));
 
 const seedData = async () => {
   try {
@@ -205,6 +217,30 @@ const seedData = async () => {
 
     console.log('Students created:', students.length);
 
+    // Create StudentClass associations
+    const studentClassRecords = [];
+    
+    // John Doe and Jane Smith and Mary Johnson in Mathematics 101
+    studentClassRecords.push(
+      { studentId: students[0]._id, classId: mathClass._id }, // John Doe
+      { studentId: students[1]._id, classId: mathClass._id }, // Jane Smith
+      { studentId: students[3]._id, classId: mathClass._id }  // Mary Johnson
+    );
+    
+    // Peter Jones and Susan Brown in History of Art
+    studentClassRecords.push(
+      { studentId: students[2]._id, classId: historyClass._id }, // Peter Jones
+      { studentId: students[5]._id, classId: historyClass._id }  // Susan Brown
+    );
+    
+    // David Williams in Physics for Beginners
+    studentClassRecords.push(
+      { studentId: students[4]._id, classId: physicsClass._id }  // David Williams
+    );
+    
+    await StudentClass.insertMany(studentClassRecords);
+    console.log('StudentClass associations created:', studentClassRecords.length);
+
     // Create attendance records (using the same data as in mockAttendance)
     const today = new Date();
     const yesterday = new Date(today);
@@ -238,13 +274,13 @@ const seedData = async () => {
       },
       {
         classId: mathClass._id,
-        studentId: students[2]._id, // Mary Johnson
+        studentId: students[3]._id, // Mary Johnson
         date: today,
         status: 'present',
       },
       {
         classId: historyClass._id,
-        studentId: students[3]._id, // Peter Jones
+        studentId: students[2]._id, // Peter Jones
         date: today,
         status: 'absent',
       }
