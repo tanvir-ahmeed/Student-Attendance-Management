@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/layout/Sidebar';
 import Header from './components/layout/Header';
@@ -49,6 +49,7 @@ const LoginRoute: React.FC = () => {
 const ProtectedLayout: React.FC = () => {
   // We'll use a simple approach to check auth status
   const token = localStorage.getItem('token');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   console.log('ProtectedLayout: token exists:', !!token);
   if (token) {
@@ -62,11 +63,19 @@ const ProtectedLayout: React.FC = () => {
     return <Navigate to="/login" />;
   }
 
+  const handleSidebarToggle = (collapsed: boolean) => {
+    setSidebarCollapsed(collapsed);
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
+      <Sidebar collapsed={sidebarCollapsed} onToggle={handleSidebarToggle} />
+      <div
+        className={`flex-1 flex flex-col overflow-hidden transition-all duration-300 ${
+          sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'
+        }`}
+      >
+        <Header sidebarCollapsed={sidebarCollapsed} />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 md:p-8">
           <Suspense fallback={<Loading message="Loading page content..." />}>
             <Routes>

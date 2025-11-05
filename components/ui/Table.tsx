@@ -20,7 +20,8 @@ interface TableRowProps {
   className?: string;
 }
 
-interface TableHeaderCellProps extends React.ThHTMLAttributes<HTMLTableCellElement> {
+interface TableHeaderCellProps
+  extends React.ThHTMLAttributes<HTMLTableCellElement> {
   children: React.ReactNode;
   className?: string;
 }
@@ -78,10 +79,10 @@ const TableHeaderCell: React.FC<TableHeaderCellProps> = ({
   );
 };
 
-const TableCell: React.FC<TableCellProps> = ({ 
-  children, 
+const TableCell: React.FC<TableCellProps> = ({
+  children,
   className = '',
-  ...props 
+  ...props
 }) => {
   return (
     <td

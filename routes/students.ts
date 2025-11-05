@@ -100,11 +100,10 @@ router.post(
         const studentClasses = await StudentClass.find({ classId }).populate(
           'studentId'
         );
-        const studentsInClass = studentClasses.map(sc => sc.studentId);
 
         // Check if any student in this class has the same roll number
-        const existingStudent = studentsInClass.find(
-          student => student.rollNumber === rollNumber
+        const existingStudent = studentClasses.find(
+          (sc: any) => sc.studentId && sc.studentId.rollNumber === rollNumber
         );
 
         if (existingStudent) {

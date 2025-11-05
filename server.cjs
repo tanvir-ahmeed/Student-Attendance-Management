@@ -372,6 +372,72 @@ app.post('/api/attendance', auth, authorizeRoles('admin'), async (req, res) => {
   }
 });
 
+// Get attendance summary for a specific class and date
+app.get(
+  '/api/attendance/summary/:classId/:date',
+  auth,
+  authorizeRoles('admin'),
+  async (req, res) => {
+    try {
+      const { classId, date } = req.params;
+
+      // Validate class exists
+      const classExists = await Class.findById(classId);
+      if (!classExists) {
+        return res.status(404).json({ message: 'Class not found' });
+      }
+
+      // Validate date format
+      const attendanceDate = new Date(date);
+      if (isNaN(attendanceDate.getTime())) {
+        return res.status(400).json({ message: 'Invalid date format' });
+      }
+
+      // Set date to start of day
+      attendanceDate.setHours(0, 0, 0, 0);
+
+      // Get all students in the class
+      const students = await Student.find({ classId });
+
+      if (students.length === 0) {
+        return res.json([]);
+      }
+
+      // Get attendance records for the date
+      const endDate = new Date(
+        attendanceDate.getTime() + 24 * 60 * 60 * 1000 - 1
+      );
+
+      const attendanceRecords = await Attendance.find({
+        classId,
+        date: {
+          $gte: attendanceDate,
+          $lte: endDate,
+        },
+      });
+
+      // Create a map for quick lookup
+      const attendanceMap = new Map();
+      attendanceRecords.forEach(record => {
+        attendanceMap.set(record.studentId.toString(), record.status);
+      });
+
+      // Build summary
+      const summary = students.map(student => ({
+        studentId: student._id,
+        studentName: student.name,
+        rollNumber: student.rollNumber,
+        status: attendanceMap.get(student._id.toString()) || 'absent',
+      }));
+
+      res.json(summary);
+    } catch (err) {
+      console.error(err.message);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+);
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ message: 'Server is running!' });

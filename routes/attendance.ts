@@ -7,6 +7,8 @@ import StudentClass from '../models/StudentClass';
 
 const router = express.Router();
 
+console.log('Attendance routes loaded');
+
 // @desc    Get all attendance records
 // @route   GET /api/attendance
 // @access  Private
@@ -156,6 +158,97 @@ router.delete('/:id', async (req: Request, res: Response) => {
   }
 });
 
+// @desc    Get attendance summary for a specific class and date
+// @route   GET /api/attendance/summary/:classId/:date
+// @access  Private
+router.get('/summary/:classId/:date', async (req: Request, res: Response) => {
+  console.log('Attendance summary route called with params:', req.params);
+  console.log('Full URL:', req.originalUrl);
+  try {
+    const { classId, date } = req.params;
+    console.log('Processing summary for classId:', classId, 'date:', date);
+
+    // Validate class exists
+    const classExists = await Class.findById(classId);
+    console.log('Class exists:', !!classExists);
+    if (!classExists) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    // Validate date format
+    const attendanceDate = new Date(date);
+    console.log('Attendance date:', attendanceDate);
+    if (isNaN(attendanceDate.getTime())) {
+      return res.status(400).json({ message: 'Invalid date format' });
+    }
+
+    // Set date to start of day
+    attendanceDate.setHours(0, 0, 0, 0);
+
+    // Get all students in the class using StudentClass
+    const studentClasses = await StudentClass.find({ classId });
+    console.log('Student classes found:', studentClasses.length);
+
+    if (studentClasses.length === 0) {
+      // Return empty summary if no students in class
+      console.log('No students in class, returning empty summary');
+      return res.json({
+        classId,
+        date,
+        total: 0,
+        present: 0,
+        absent: 0,
+        percentage: 0,
+      });
+    }
+
+    // Get attendance records for the date
+    const endDate = new Date(
+      attendanceDate.getTime() + 24 * 60 * 60 * 1000 - 1
+    );
+
+    const attendanceRecords = await Attendance.find({
+      classId,
+      date: {
+        $gte: attendanceDate,
+        $lte: endDate,
+      },
+    });
+    console.log('Attendance records found:', attendanceRecords.length);
+
+    // Count present and absent
+    let present = 0;
+    const attendanceMap = new Map();
+
+    attendanceRecords.forEach(record => {
+      const studentId = (record.studentId as any)._id || record.studentId;
+      attendanceMap.set(studentId.toString(), record.status);
+      if (record.status === 'present') {
+        present++;
+      }
+    });
+
+    const total = studentClasses.length;
+    const absent = total - present;
+    const percentage = total > 0 ? Math.round((present / total) * 100) : 0;
+
+    // Return the summary in the required format
+    const result = {
+      classId,
+      date,
+      total,
+      present,
+      absent,
+      percentage,
+    };
+    console.log('Returning result:', result);
+    res.json(result);
+  } catch (err: any) {
+    console.error('Error in attendance summary route:', err.message);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @desc    Get attendance summary
 // @route   GET /api/attendance/summary
 // @access  Private
@@ -289,11 +382,11 @@ router.get('/report/:classId', async (req: Request, res: Response) => {
     });
 
     // Build report
-    const report = students.map(student => ({
+    const report = students.map((student: any) => ({
       studentId: student._id,
       studentName: student.name,
       rollNumber: student.rollNumber,
-      status: attendanceMap.get((student._id as any).toString()) || 'absent',
+      status: attendanceMap.get(student._id.toString()) || 'absent',
     }));
 
     res.json(report);
@@ -301,6 +394,14 @@ router.get('/report/:classId', async (req: Request, res: Response) => {
     console.error(err.message);
     res.status(500).json({ message: 'Server error' });
   }
+});
+
+console.log('Attendance routes defined');
+
+// Test route
+router.get('/test-summary', (req, res) => {
+  console.log('Test summary route called');
+  res.json({ message: 'Test summary route working' });
 });
 
 export default router;
