@@ -1,0 +1,5 @@
+{
+  "name": "Student Attendance System",
+  "description": "A modern, frontend-only Student Attendance Management System built with React, TypeScript, and Tailwind CSS. It features dashboard summaries, class and student management, and attendance tracking.",
+  "requestFramePermissions": []
+}
