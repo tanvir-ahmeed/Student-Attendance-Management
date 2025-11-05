@@ -28,4 +28,7 @@ const StudentClassSchema: Schema = new Schema(
 // Create a compound index to prevent duplicate student-class associations
 StudentClassSchema.index({ studentId: 1, classId: 1 }, { unique: true });
 
-export default mongoose.model<IStudentClass>('StudentClass', StudentClassSchema);
+export default mongoose.model<IStudentClass>(
+  'StudentClass',
+  StudentClassSchema
+);

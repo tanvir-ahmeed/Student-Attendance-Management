@@ -1,25 +1,11 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
-import {
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  Divider,
-  Toolbar,
-  Box,
-  Typography,
-  useTheme,
-  useMediaQuery,
-} from '@mui/material';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboardIcon,
   SchoolIcon,
   UsersIcon,
   CheckSquareIcon,
   HistoryIcon,
-  UserIcon,
 } from '../Icons';
 
 const navigation = [
@@ -43,86 +29,51 @@ const Sidebar: React.FC<SidebarProps> = ({
   mobileOpen = false,
   onMobileClose,
 }) => {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const location = useLocation();
 
   const drawer = (
-    <div className="flex flex-col h-full bg-indigo-700">
-      <Toolbar className="flex items-center px-4 bg-indigo-800">
-        <SchoolIcon className="h-8 w-auto text-white" />
-        <Typography variant="h6" className="ml-3 text-white font-bold">
+    <div className="flex flex-col h-full bg-white border-r border-gray-200">
+      <div className="flex items-center px-6 py-4 border-b border-gray-200">
+        <SchoolIcon className="h-8 w-auto text-indigo-600" />
+        <span className="ml-3 text-xl font-bold text-gray-900">
           Attendance Pro
-        </Typography>
-      </Toolbar>
-      <Divider className="bg-indigo-600" />
-      <List className="flex-1 px-2 py-4 space-y-1">
-        {navigation.map(item => (
-          <NavLink
-            key={item.name}
-            to={item.href}
-            end={item.href === '/'}
-            className={({ isActive }) =>
-              `flex items-center px-4 py-3 text-sm font-medium rounded-lg mx-2 transition-colors duration-200 ${
+        </span>
+      </div>
+      <nav className="flex-1 px-4 py-6 space-y-1">
+        {navigation.map(item => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.href;
+
+          return (
+            <NavLink
+              key={item.name}
+              to={item.href}
+              className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-200 ${
                 isActive
-                  ? 'bg-indigo-800 text-white'
-                  : 'text-indigo-100 hover:bg-indigo-600 hover:text-white'
-              }`
-            }
-            onClick={isMobile && onMobileClose ? onMobileClose : undefined}
-          >
-            <ListItemIcon className="min-w-0 mr-3 text-indigo-300">
-              <item.icon className="h-6 w-6" />
-            </ListItemIcon>
-            <ListItemText
-              primary={item.name}
-              className="text-inherit"
-              primaryTypographyProps={{ className: 'font-medium' }}
-            />
-          </NavLink>
-        ))}
-      </List>
+                  ? 'bg-indigo-50 text-indigo-700 border border-indigo-200'
+                  : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+              }`}
+              onClick={onMobileClose}
+            >
+              <Icon
+                className={`h-5 w-5 ${
+                  isActive ? 'text-indigo-600' : 'text-gray-500'
+                }`}
+              />
+              <span className="ml-3">{item.name}</span>
+            </NavLink>
+          );
+        })}
+      </nav>
     </div>
   );
 
-  if (isMobile) {
-    return (
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={onMobileClose}
-        ModalProps={{
-          keepMounted: true, // Better open performance on mobile.
-        }}
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: 280,
-            boxSizing: 'border-box',
-            backgroundColor: 'transparent',
-            border: 'none',
-          },
-        }}
-      >
-        {drawer}
-      </Drawer>
-    );
-  }
-
   return (
-    <Drawer
-      variant="permanent"
-      sx={{
-        width: 280,
-        flexShrink: 0,
-        [`& .MuiDrawer-paper`]: {
-          width: 280,
-          boxSizing: 'border-box',
-          backgroundColor: 'transparent',
-          border: 'none',
-        },
-      }}
-    >
-      {drawer}
-    </Drawer>
+    <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0">
+      <div className="flex-1 flex flex-col min-h-0 border-r border-gray-200 bg-white">
+        {drawer}
+      </div>
+    </div>
   );
 };
 

@@ -5,6 +5,7 @@ import Header from './components/layout/Header';
 import LoginPage from './pages/Login';
 import { DataProvider } from './contexts/DataContext';
 import Loading from './components/ui/Loading';
+import { ToastProvider } from './components/ui/ToastProvider';
 
 // Lazy load pages for better performance
 const DashboardPage = lazy(() => import('./pages/Dashboard'));
@@ -16,12 +17,14 @@ const AttendanceHistoryPage = lazy(() => import('./pages/AttendanceHistory'));
 const App: React.FC = () => {
   return (
     <DataProvider>
-      <HashRouter>
-        <Routes>
-          <Route path="/login" element={<LoginRoute />} />
-          <Route path="/*" element={<ProtectedLayout />} />
-        </Routes>
-      </HashRouter>
+      <ToastProvider>
+        <HashRouter>
+          <Routes>
+            <Route path="/login" element={<LoginRoute />} />
+            <Route path="/*" element={<ProtectedLayout />} />
+          </Routes>
+        </HashRouter>
+      </ToastProvider>
     </DataProvider>
   );
 };
@@ -60,11 +63,11 @@ const ProtectedLayout: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-50">
       <Sidebar />
       <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100 p-4 sm:p-6 md:p-8">
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-4 sm:p-6 md:p-8">
           <Suspense fallback={<Loading message="Loading page content..." />}>
             <Routes>
               <Route path="/" element={<DashboardPage />} />

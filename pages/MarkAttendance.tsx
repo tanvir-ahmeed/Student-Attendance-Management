@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import Button from '../components/ui/Button';
+import Table from '../components/ui/Table';
+import PageLayout from '../components/layout/PageLayout';
 import { getAttendanceSummary } from '../utils/api';
+import { CheckSquareIcon, TrashIcon } from '../components/Icons';
 
 type AttendanceStatus = 'Present' | 'Absent';
 
@@ -26,6 +29,7 @@ const MarkAttendancePage: React.FC = () => {
   >(new Map());
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [localLoading, setLocalLoading] = useState(false);
 
   // Filter classes based on user role
   const availableClasses =
@@ -34,7 +38,7 @@ const MarkAttendancePage: React.FC = () => {
       : classes;
 
   // Filter students based on selected class
-  const studentsInClass = students.filter(s => 
+  const studentsInClass = students.filter(s =>
     s.classIds?.includes(selectedClassId)
   );
 
@@ -47,9 +51,6 @@ const MarkAttendancePage: React.FC = () => {
   useEffect(() => {
     if (selectedClassId) {
       fetchStudents(selectedClassId);
-    } else {
-      // Clear students if no class selected
-      // This would be handled by the context provider
     }
   }, [selectedClassId, fetchStudents]);
 
@@ -65,6 +66,7 @@ const MarkAttendancePage: React.FC = () => {
   const loadAttendanceData = async () => {
     if (!token) return;
 
+    setLocalLoading(true);
     try {
       const summary = await getAttendanceSummary(
         token,
@@ -96,6 +98,8 @@ const MarkAttendancePage: React.FC = () => {
         newMap.set(student.id, 'Absent');
       });
       setAttendanceMap(newMap);
+    } finally {
+      setLocalLoading(false);
     }
   };
 
@@ -105,7 +109,7 @@ const MarkAttendancePage: React.FC = () => {
 
   const handleSave = async () => {
     if (!selectedClassId) {
-      alert('Please select a class');
+      setSaveError('Please select a class');
       return;
     }
 
@@ -138,7 +142,10 @@ const MarkAttendancePage: React.FC = () => {
   if (loading && classes.length === 0) {
     return (
       <div className="flex justify-center items-center h-64">
-        Loading classes...
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div>
+          <p className="mt-2 text-gray-600">Loading classes...</p>
+        </div>
       </div>
     );
   }
@@ -154,24 +161,24 @@ const MarkAttendancePage: React.FC = () => {
   // Check if teacher has assigned classes
   if (user?.role === 'teacher' && availableClasses.length === 0) {
     return (
-      <div className="page-transition bg-white rounded-lg shadow p-6">
-        <div className="text-center py-8">
-          <h3 className="text-lg font-medium text-gray-900">
-            No Classes Assigned
-          </h3>
-          <p className="mt-2 text-gray-500">
-            You have not been assigned any classes yet. Please contact your
-            administrator.
-          </p>
+      <PageLayout title="Mark Attendance" subtitle="Record student attendance">
+        <div className="bg-white rounded-lg shadow p-6 text-center">
+          <div className="text-center py-8">
+            <h3 className="text-lg font-medium text-gray-900">
+              No Classes Assigned
+            </h3>
+            <p className="mt-2 text-gray-500">
+              You have not been assigned any classes yet. Please contact your
+              administrator.
+            </p>
+          </div>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="py-6 page-transition">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Mark Attendance</h1>
-
+    <PageLayout title="Mark Attendance" subtitle="Record student attendance">
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200 mb-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -207,112 +214,142 @@ const MarkAttendancePage: React.FC = () => {
 
       {selectedClassId && (
         <div className="bg-white shadow rounded-lg overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+          <div className="px-6 py-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <h2 className="text-lg font-medium text-gray-900">
-              Students in {availableClasses.find(c => c.id === selectedClassId)?.name}
+              Students in{' '}
+              {availableClasses.find(c => c.id === selectedClassId)?.name}
             </h2>
-            <div className="flex space-x-2">
+            <div className="flex flex-wrap gap-2">
               <Button
                 variant="secondary"
                 onClick={() => markAll('Present')}
-                disabled={studentsInClass.length === 0}
+                disabled={studentsInClass.length === 0 || localLoading}
+                size="sm"
               >
                 Mark All Present
               </Button>
               <Button
                 variant="secondary"
                 onClick={() => markAll('Absent')}
-                disabled={studentsInClass.length === 0}
+                disabled={studentsInClass.length === 0 || localLoading}
+                size="sm"
               >
                 Mark All Absent
               </Button>
             </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Student Name
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Roll Number
-                  </th>
-                  <th
-                    scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                  >
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {studentsInClass.length > 0 ? (
-                  studentsInClass.map(student => (
-                    <tr key={student.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+
+          {localLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Loading attendance data...</p>
+              </div>
+            </div>
+          ) : studentsInClass.length > 0 ? (
+            <>
+              <Table>
+                <Table.Head>
+                  <Table.Row>
+                    <Table.HeaderCell>Student Name</Table.HeaderCell>
+                    <Table.HeaderCell>Roll Number</Table.HeaderCell>
+                    <Table.HeaderCell>Status</Table.HeaderCell>
+                  </Table.Row>
+                </Table.Head>
+                <Table.Body>
+                  {studentsInClass.map(student => (
+                    <Table.Row key={student.id}>
+                      <Table.Cell className="font-medium text-gray-900">
                         {student.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {student.rollNumber}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      </Table.Cell>
+                      <Table.Cell>{student.rollNumber}</Table.Cell>
+                      <Table.Cell>
                         <div className="flex space-x-4">
                           <label className="inline-flex items-center">
                             <input
                               type="radio"
-                              className="form-radio"
+                              className="form-radio h-4 w-4 text-indigo-600"
                               name={`status-${student.id}`}
-                              checked={attendanceMap.get(student.id) === 'Present'}
-                              onChange={() => handleStatusChange(student.id, 'Present')}
+                              checked={
+                                attendanceMap.get(student.id) === 'Present'
+                              }
+                              onChange={() =>
+                                handleStatusChange(student.id, 'Present')
+                              }
                             />
-                            <span className="ml-2">Present</span>
+                            <span className="ml-2 flex items-center">
+                              <CheckSquareIcon className="h-5 w-5 text-green-500 mr-1" />
+                              Present
+                            </span>
                           </label>
                           <label className="inline-flex items-center">
                             <input
                               type="radio"
-                              className="form-radio"
+                              className="form-radio h-4 w-4 text-indigo-600"
                               name={`status-${student.id}`}
-                              checked={attendanceMap.get(student.id) === 'Absent'}
-                              onChange={() => handleStatusChange(student.id, 'Absent')}
+                              checked={
+                                attendanceMap.get(student.id) === 'Absent'
+                              }
+                              onChange={() =>
+                                handleStatusChange(student.id, 'Absent')
+                              }
                             />
-                            <span className="ml-2">Absent</span>
+                            <span className="ml-2 flex items-center">
+                              <TrashIcon className="h-5 w-5 text-red-500 mr-1" />
+                              Absent
+                            </span>
                           </label>
                         </div>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="px-6 py-4 text-center text-sm text-gray-500">
-                      No students found in this class.
-                    </td>
-                  </tr>
+                      </Table.Cell>
+                    </Table.Row>
+                  ))}
+                </Table.Body>
+              </Table>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div className="text-sm text-gray-500">
+                    {studentsInClass.length} students in this class
+                  </div>
+                  <Button
+                    onClick={handleSave}
+                    isLoading={isSaving}
+                    disabled={isSaving || studentsInClass.length === 0}
+                  >
+                    Save Attendance
+                  </Button>
+                </div>
+                {saveError && (
+                  <div className="mt-2 text-sm text-red-600">{saveError}</div>
                 )}
-              </tbody>
-            </table>
-          </div>
-          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-            <Button
-              onClick={handleSave}
-              disabled={isSaving || studentsInClass.length === 0}
-              className="w-full md:w-auto"
-            >
-              {isSaving ? 'Saving...' : 'Save Attendance'}
-            </Button>
-            {saveError && (
-              <div className="mt-2 text-sm text-red-600">{saveError}</div>
-            )}
-          </div>
+              </div>
+            </>
+          ) : (
+            <div className="text-center py-12">
+              <svg
+                className="mx-auto h-12 w-12 text-gray-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">
+                No students found
+              </h3>
+              <p className="mt-1 text-sm text-gray-500">
+                No students are assigned to this class.
+              </p>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 };
 

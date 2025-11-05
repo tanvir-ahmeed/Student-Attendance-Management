@@ -127,7 +127,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
                   return String(cls);
                 }
               });
-            } else if (typeof (s as any).classIds === 'object' && (s as any).classIds._id) {
+            } else if (
+              typeof (s as any).classIds === 'object' &&
+              (s as any).classIds._id
+            ) {
               classIds = [(s as any).classIds._id];
             } else if (typeof (s as any).classIds === 'object') {
               classIds = [String((s as any).classIds)];
@@ -253,8 +256,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         setLoading(true);
         setError(null);
         // Handle both single classId and multiple classIds
-        const classIds = student.classIds || (student.classId ? [student.classId] : []);
-        
+        const classIds =
+          student.classIds || (student.classId ? [student.classId] : []);
+
         const data = await api.createStudent(token, {
           classIds,
           name: student.name,
@@ -275,7 +279,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
                 return String(cls);
               }
             });
-          } else if (typeof (data as any).classIds === 'object' && (data as any).classIds._id) {
+          } else if (
+            typeof (data as any).classIds === 'object' &&
+            (data as any).classIds._id
+          ) {
             classIdsArray = [(data as any).classIds._id];
           } else if (typeof (data as any).classIds === 'object') {
             classIdsArray = [String((data as any).classIds)];
@@ -314,8 +321,9 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         setLoading(true);
         setError(null);
         // Handle both single classId and multiple classIds
-        const classIds = student.classIds || (student.classId ? [student.classId] : []);
-        
+        const classIds =
+          student.classIds || (student.classId ? [student.classId] : []);
+
         const data = await api.updateStudent(token, studentId, {
           classIds,
           name: student.name,
@@ -336,7 +344,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
                 return String(cls);
               }
             });
-          } else if (typeof (data as any).classIds === 'object' && (data as any).classIds._id) {
+          } else if (
+            typeof (data as any).classIds === 'object' &&
+            (data as any).classIds._id
+          ) {
             classIdsArray = [(data as any).classIds._id];
           } else if (typeof (data as any).classIds === 'object') {
             classIdsArray = [String((data as any).classIds)];

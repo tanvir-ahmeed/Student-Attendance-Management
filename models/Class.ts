@@ -32,8 +32,10 @@ const ClassSchema: Schema = new Schema(
 );
 
 // Add a method to get all students in this class
-ClassSchema.methods.getStudents = async function() {
-  const studentClasses = await StudentClass.find({ classId: this._id }).populate('studentId');
+ClassSchema.methods.getStudents = async function () {
+  const studentClasses = await StudentClass.find({
+    classId: this._id,
+  }).populate('studentId');
   return studentClasses.map(sc => sc.studentId);
 };
 

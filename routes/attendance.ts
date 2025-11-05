@@ -58,7 +58,10 @@ router.post('/', async (req: Request, res: Response) => {
     }
 
     // Check if student is assigned to this class
-    const studentClassExists = await StudentClass.findOne({ studentId, classId });
+    const studentClassExists = await StudentClass.findOne({
+      studentId,
+      classId,
+    });
     if (!studentClassExists) {
       return res
         .status(400)
@@ -257,7 +260,9 @@ router.get('/report/:classId', async (req: Request, res: Response) => {
     }
 
     // Get all students in the class using StudentClass
-    const studentClasses = await StudentClass.find({ classId }).populate('studentId');
+    const studentClasses = await StudentClass.find({ classId }).populate(
+      'studentId'
+    );
     const students = studentClasses.map(sc => sc.studentId);
 
     if (students.length === 0) {

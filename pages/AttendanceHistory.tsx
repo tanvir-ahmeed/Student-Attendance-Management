@@ -1,5 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
+import Button from '../components/ui/Button';
+import Table from '../components/ui/Table';
+import PageLayout from '../components/layout/PageLayout';
 import Loading from '../components/ui/Loading';
 
 const AttendanceHistoryPage: React.FC = () => {
@@ -162,28 +165,29 @@ const AttendanceHistoryPage: React.FC = () => {
 
   if (error || localError) {
     return (
-      <div className="page-transition bg-white rounded-lg shadow p-6">
-        <div className="rounded-md bg-red-50 p-4">
-          <div className="text-sm text-red-700">
-            Error loading attendance records: {error || localError}
+      <PageLayout title="Attendance History" subtitle="View and filter attendance records">
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="rounded-md bg-red-50 p-4">
+            <div className="text-sm text-red-700">
+              Error loading attendance records: {error || localError}
+            </div>
+            <button 
+              onClick={handleRetry}
+              className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Retry
+            </button>
           </div>
-          <button 
-            onClick={handleRetry}
-            className="mt-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Retry
-          </button>
         </div>
-      </div>
+      </PageLayout>
     );
   }
 
   return (
-    <div className="page-transition bg-white rounded-lg shadow p-6">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-        <h1 className="text-2xl font-bold text-gray-900">
-          Attendance History & Reports
-        </h1>
+    <PageLayout 
+      title="Attendance History" 
+      subtitle="View and filter attendance records"
+      actions={
         <div className="flex space-x-2">
           <button
             onClick={() => setReportView('list')}
@@ -206,8 +210,8 @@ const AttendanceHistoryPage: React.FC = () => {
             Summary Report
           </button>
         </div>
-      </div>
-
+      }
+    >
       {localError && (
         <div className="rounded-md bg-red-50 p-4 mb-4">
           <div className="text-sm text-red-700">
@@ -251,164 +255,151 @@ const AttendanceHistoryPage: React.FC = () => {
 
       {reportView === 'list' ? (
         <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Student Name
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Class
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredAttendance && filteredAttendance.length > 0 ? (
-                  filteredAttendance.map((record, index) => (
-                    <tr key={`${record.id}-${index}`} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {record.date || 'Unknown'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {getStudentName(record.studentId)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {getClassName(record.classId)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm">
-                        <span
-                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            record.status === 'Present'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-red-100 text-red-800'
-                          }`}
-                        >
-                          {record.status || 'Unknown'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={4} className="px-6 py-4 text-center text-sm text-gray-500">
-                      No attendance records found for the selected filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          {filteredAttendance && filteredAttendance.length > 0 ? (
+            <Table>
+              <Table.Head>
+                <Table.Row>
+                  <Table.HeaderCell>Date</Table.HeaderCell>
+                  <Table.HeaderCell>Student Name</Table.HeaderCell>
+                  <Table.HeaderCell>Class</Table.HeaderCell>
+                  <Table.HeaderCell>Status</Table.HeaderCell>
+                </Table.Row>
+              </Table.Head>
+              <Table.Body>
+                {filteredAttendance.map((record, index) => (
+                  <Table.Row key={`${record.id}-${index}`}>
+                    <Table.Cell>
+                      {record.date || 'Unknown'}
+                    </Table.Cell>
+                    <Table.Cell className="font-medium text-gray-900">
+                      {getStudentName(record.studentId)}
+                    </Table.Cell>
+                    <Table.Cell>
+                      {getClassName(record.classId)}
+                    </Table.Cell>
+                    <Table.Cell>
+                      <span
+                        className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          record.status === 'Present'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {record.status || 'Unknown'}
+                      </span>
+                    </Table.Cell>
+                  </Table.Row>
+                ))}
+              </Table.Body>
+            </Table>
+          ) : (
+            <div className="text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance records found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {filterClassId || filterDate 
+                  ? 'No records match your filters.' 
+                  : 'No attendance records have been recorded yet.'}
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-white shadow-sm rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Class
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Present
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Absent
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Attendance Rate
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {attendanceSummary && attendanceSummary.length > 0 ? (
-                  attendanceSummary.map((dateGroup, dateIndex) => {
-                    console.log('Rendering date group:', dateGroup);
-                    return (
-                      <React.Fragment key={`${dateGroup.date}-${dateIndex}`}>
-                        {dateGroup.classes && dateGroup.classes.length > 0 ? (
-                          dateGroup.classes.map((classData, classIndex) => {
-                            console.log('Rendering class data:', classData);
-                            return (
-                              <tr 
-                                key={`${dateGroup.date}-${classData.classId}-${classIndex}`} 
-                                className={classIndex === 0 ? 'border-t-2 border-gray-100' : ''}
-                              >
-                                {classIndex === 0 && dateGroup.classes && dateGroup.classes.length > 0 && (
-                                  <td 
-                                    rowSpan={dateGroup.classes.length} 
-                                    className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 align-top"
-                                  >
-                                    {dateGroup.date}
-                                  </td>
-                                )}
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {classData.className || 'Unknown'}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {classData.present || 0}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {classData.absent || 0}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                  {classData.total || 0}
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                  <div className="flex items-center">
-                                    <span className="mr-2 text-gray-900">{classData.percentage || 0}%</span>
-                                    <div className="w-24 bg-gray-200 rounded-full h-2">
-                                      <div 
-                                        className={`h-2 rounded-full ${
-                                          (classData.percentage || 0) >= 75 
-                                            ? 'bg-green-600' 
-                                            : (classData.percentage || 0) >= 50 
-                                              ? 'bg-yellow-500' 
-                                              : 'bg-red-600'
-                                        }`} 
-                                        style={{ width: `${classData.percentage || 0}%` }}
-                                      ></div>
-                                    </div>
+          {attendanceSummary && attendanceSummary.length > 0 ? (
+            <Table>
+              <Table.Head>
+                <Table.Row>
+                  <Table.HeaderCell>Date</Table.HeaderCell>
+                  <Table.HeaderCell>Class</Table.HeaderCell>
+                  <Table.HeaderCell>Present</Table.HeaderCell>
+                  <Table.HeaderCell>Absent</Table.HeaderCell>
+                  <Table.HeaderCell>Total</Table.HeaderCell>
+                  <Table.HeaderCell>Attendance Rate</Table.HeaderCell>
+                </Table.Row>
+              </Table.Head>
+              <Table.Body>
+                {attendanceSummary.map((dateGroup, dateIndex) => {
+                  console.log('Rendering date group:', dateGroup);
+                  return (
+                    <React.Fragment key={`${dateGroup.date}-${dateIndex}`}>
+                      {dateGroup.classes && dateGroup.classes.length > 0 ? (
+                        dateGroup.classes.map((classData, classIndex) => {
+                          console.log('Rendering class data:', classData);
+                          return (
+                            <Table.Row 
+                              key={`${dateGroup.date}-${classData.classId}-${classIndex}`}
+                            >
+                              {classIndex === 0 && dateGroup.classes && dateGroup.classes.length > 0 && (
+                                <Table.Cell 
+                                  rowSpan={dateGroup.classes.length} 
+                                  className="font-medium text-gray-900 align-top"
+                                >
+                                  {dateGroup.date}
+                                </Table.Cell>
+                              )}
+                              <Table.Cell>
+                                {classData.className || 'Unknown'}
+                              </Table.Cell>
+                              <Table.Cell>
+                                {classData.present || 0}
+                              </Table.Cell>
+                              <Table.Cell>
+                                {classData.absent || 0}
+                              </Table.Cell>
+                              <Table.Cell>
+                                {classData.total || 0}
+                              </Table.Cell>
+                              <Table.Cell>
+                                <div className="flex items-center">
+                                  <span className="mr-2 text-gray-900">{classData.percentage || 0}%</span>
+                                  <div className="w-24 bg-gray-200 rounded-full h-2">
+                                    <div 
+                                      className={`h-2 rounded-full ${
+                                        (classData.percentage || 0) >= 75 
+                                          ? 'bg-green-600' 
+                                          : (classData.percentage || 0) >= 50 
+                                            ? 'bg-yellow-500' 
+                                            : 'bg-red-600'
+                                      }`} 
+                                      style={{ width: `${classData.percentage || 0}%` }}
+                                    ></div>
                                   </div>
-                                </td>
-                              </tr>
-                            );
-                          })
-                        ) : (
-                          <tr key={`no-data-${dateIndex}`}>
-                            <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                              No class data available for this date.
-                            </td>
-                          </tr>
-                        )}
-                      </React.Fragment>
-                    );
-                  })
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-sm text-gray-500">
-                      No attendance summary data found for the selected filters.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                                </div>
+                              </Table.Cell>
+                            </Table.Row>
+                          );
+                        })
+                      ) : (
+                        <Table.Row key={`no-data-${dateIndex}`}>
+                          <Table.Cell colSpan={6} className="text-center text-gray-500">
+                            No class data available for this date.
+                          </Table.Cell>
+                        </Table.Row>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </Table.Body>
+            </Table>
+          ) : (
+            <div className="text-center py-12">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No attendance summary data found</h3>
+              <p className="mt-1 text-sm text-gray-500">
+                {filterClassId || filterDate 
+                  ? 'No records match your filters.' 
+                  : 'No attendance records have been recorded yet.'}
+              </p>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </PageLayout>
   );
 };
 

@@ -17,10 +17,12 @@ router.get(
   async (req: Request, res: Response) => {
     try {
       const { classId } = req.query;
-      
+
       if (classId) {
         // Get students for a specific class
-        const studentClasses = await StudentClass.find({ classId }).populate('studentId');
+        const studentClasses = await StudentClass.find({ classId }).populate(
+          'studentId'
+        );
         const students = studentClasses.map(sc => sc.studentId);
         res.json(students);
       } else {
@@ -44,7 +46,9 @@ router.get(
   authorizeRoles('admin'),
   async (req: Request, res: Response) => {
     try {
-      const studentClasses = await StudentClass.find({ classId: req.params.classId }).populate('studentId');
+      const studentClasses = await StudentClass.find({
+        classId: req.params.classId,
+      }).populate('studentId');
       const students = studentClasses.map(sc => sc.studentId);
       res.json(students);
     } catch (err: any) {
@@ -74,12 +78,10 @@ router.post(
         !rollNumber ||
         !email
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              'Please provide all required fields: classIds (array), name, rollNumber, email',
-          });
+        return res.status(400).json({
+          message:
+            'Please provide all required fields: classIds (array), name, rollNumber, email',
+        });
       }
 
       // Check if all classes exist
@@ -95,20 +97,20 @@ router.post(
       // Check if roll number already exists in any of these classes
       for (const classId of classIds) {
         // First, find all students in this class
-        const studentClasses = await StudentClass.find({ classId }).populate('studentId');
-        const studentsInClass = studentClasses.map(sc => sc.studentId);
-        
-        // Check if any student in this class has the same roll number
-        const existingStudent = studentsInClass.find(student => 
-          student.rollNumber === rollNumber
+        const studentClasses = await StudentClass.find({ classId }).populate(
+          'studentId'
         );
-        
+        const studentsInClass = studentClasses.map(sc => sc.studentId);
+
+        // Check if any student in this class has the same roll number
+        const existingStudent = studentsInClass.find(
+          student => student.rollNumber === rollNumber
+        );
+
         if (existingStudent) {
-          return res
-            .status(400)
-            .json({
-              message: `Roll number already exists in class with ID ${classId}`,
-            });
+          return res.status(400).json({
+            message: `Roll number already exists in class with ID ${classId}`,
+          });
         }
       }
 
@@ -122,16 +124,17 @@ router.post(
       const createdStudent = await student.save();
 
       // Create StudentClass associations
-      const studentClassPromises = classIds.map(classId => 
+      const studentClassPromises = classIds.map(classId =>
         new StudentClass({ studentId: createdStudent._id, classId }).save()
       );
-      
+
       await Promise.all(studentClassPromises);
 
       // Populate class information
-      const studentClasses = await StudentClass.find({ studentId: createdStudent._id })
-        .populate('classId', 'name');
-      
+      const studentClasses = await StudentClass.find({
+        studentId: createdStudent._id,
+      }).populate('classId', 'name');
+
       const populatedStudent: any = createdStudent.toObject();
       populatedStudent.classIds = studentClasses.map(sc => sc.classId);
 
@@ -163,12 +166,10 @@ router.put(
         !rollNumber ||
         !email
       ) {
-        return res
-          .status(400)
-          .json({
-            message:
-              'Please provide all required fields: classIds (array), name, rollNumber, email',
-          });
+        return res.status(400).json({
+          message:
+            'Please provide all required fields: classIds (array), name, rollNumber, email',
+        });
       }
 
       // Check if all classes exist
@@ -196,16 +197,17 @@ router.put(
       await StudentClass.deleteMany({ studentId: req.params.id });
 
       // Create new StudentClass associations
-      const studentClassPromises = classIds.map(classId => 
+      const studentClassPromises = classIds.map(classId =>
         new StudentClass({ studentId: req.params.id, classId }).save()
       );
-      
+
       await Promise.all(studentClassPromises);
 
       // Populate class information
-      const studentClasses = await StudentClass.find({ studentId: req.params.id })
-        .populate('classId', 'name');
-      
+      const studentClasses = await StudentClass.find({
+        studentId: req.params.id,
+      }).populate('classId', 'name');
+
       const populatedStudent: any = updatedStudent.toObject();
       populatedStudent.classIds = studentClasses.map(sc => sc.classId);
 
