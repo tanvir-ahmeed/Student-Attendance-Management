@@ -1,4 +1,5 @@
-import express, { Request, Response } from 'express';
+import * as express from 'express';
+import { Request, Response } from 'express';
 import Student from '../models/Student';
 import Class from '../models/Class';
 import StudentClass from '../models/StudentClass';
@@ -26,9 +27,18 @@ router.get(
         const students = studentClasses.map(sc => sc.studentId);
         res.json(students);
       } else {
-        // Get all students
+        // Get all students with their class associations
         const students = await Student.find();
-        res.json(students);
+        
+        // Populate classIds for each student
+        const studentsWithClasses = await Promise.all(students.map(async (student) => {
+          const studentClasses = await StudentClass.find({ studentId: student._id });
+          const populatedStudent: any = student.toObject();
+          populatedStudent.classIds = studentClasses.map(sc => sc.classId.toString());
+          return populatedStudent;
+        }));
+        
+        res.json(studentsWithClasses);
       }
     } catch (err: any) {
       console.error(err.message);
@@ -132,10 +142,10 @@ router.post(
       // Populate class information
       const studentClasses = await StudentClass.find({
         studentId: createdStudent._id,
-      }).populate('classId', 'name');
+      });
 
       const populatedStudent: any = createdStudent.toObject();
-      populatedStudent.classIds = studentClasses.map(sc => sc.classId);
+      populatedStudent.classIds = studentClasses.map(sc => sc.classId.toString());
 
       res.status(201).json(populatedStudent);
     } catch (err: any) {
@@ -205,10 +215,10 @@ router.put(
       // Populate class information
       const studentClasses = await StudentClass.find({
         studentId: req.params.id,
-      }).populate('classId', 'name');
+      });
 
       const populatedStudent: any = updatedStudent.toObject();
-      populatedStudent.classIds = studentClasses.map(sc => sc.classId);
+      populatedStudent.classIds = studentClasses.map(sc => sc.classId.toString());
 
       res.json(populatedStudent);
     } catch (err: any) {

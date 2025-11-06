@@ -114,29 +114,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         const data = await api.getStudents(token, classId);
         // Convert API response to match existing types
         const convertedData = data.map(s => {
-          // Handle classIds - could be array of strings or objects
+          // Handle classIds - should be array of strings
           let classIds: string[] = [];
-          if ((s as any).classIds) {
-            if (Array.isArray((s as any).classIds)) {
-              classIds = (s as any).classIds.map((cls: any) => {
-                if (typeof cls === 'object' && cls._id) {
-                  return cls._id;
-                } else if (typeof cls === 'object') {
-                  return String(cls);
-                } else {
-                  return String(cls);
-                }
-              });
-            } else if (
-              typeof (s as any).classIds === 'object' &&
-              (s as any).classIds._id
-            ) {
-              classIds = [(s as any).classIds._id];
-            } else if (typeof (s as any).classIds === 'object') {
-              classIds = [String((s as any).classIds)];
-            } else if (typeof (s as any).classIds === 'string') {
-              classIds = [(s as any).classIds];
-            }
+          if ((s as any).classIds && Array.isArray((s as any).classIds)) {
+            classIds = (s as any).classIds.map((cls: any) => String(cls));
+          } else if ((s as any).classIds && typeof (s as any).classIds === 'string') {
+            classIds = [(s as any).classIds];
           }
 
           return {
@@ -268,27 +251,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
         // Convert API response to match existing types
         let classIdsArray: string[] = [];
-        if ((data as any).classIds) {
-          if (Array.isArray((data as any).classIds)) {
-            classIdsArray = (data as any).classIds.map((cls: any) => {
-              if (typeof cls === 'object' && cls._id) {
-                return cls._id;
-              } else if (typeof cls === 'object') {
-                return String(cls);
-              } else {
-                return String(cls);
-              }
-            });
-          } else if (
-            typeof (data as any).classIds === 'object' &&
-            (data as any).classIds._id
-          ) {
-            classIdsArray = [(data as any).classIds._id];
-          } else if (typeof (data as any).classIds === 'object') {
-            classIdsArray = [String((data as any).classIds)];
-          } else if (typeof (data as any).classIds === 'string') {
-            classIdsArray = [(data as any).classIds];
-          }
+        if ((data as any).classIds && Array.isArray((data as any).classIds)) {
+          classIdsArray = (data as any).classIds.map((cls: any) => String(cls));
+        } else if ((data as any).classIds && typeof (data as any).classIds === 'string') {
+          classIdsArray = [(data as any).classIds];
         }
 
         const convertedData = {
@@ -333,27 +299,10 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
 
         // Convert API response to match existing types
         let classIdsArray: string[] = [];
-        if ((data as any).classIds) {
-          if (Array.isArray((data as any).classIds)) {
-            classIdsArray = (data as any).classIds.map((cls: any) => {
-              if (typeof cls === 'object' && cls._id) {
-                return cls._id;
-              } else if (typeof cls === 'object') {
-                return String(cls);
-              } else {
-                return String(cls);
-              }
-            });
-          } else if (
-            typeof (data as any).classIds === 'object' &&
-            (data as any).classIds._id
-          ) {
-            classIdsArray = [(data as any).classIds._id];
-          } else if (typeof (data as any).classIds === 'object') {
-            classIdsArray = [String((data as any).classIds)];
-          } else if (typeof (data as any).classIds === 'string') {
-            classIdsArray = [(data as any).classIds];
-          }
+        if ((data as any).classIds && Array.isArray((data as any).classIds)) {
+          classIdsArray = (data as any).classIds.map((cls: any) => String(cls));
+        } else if ((data as any).classIds && typeof (data as any).classIds === 'string') {
+          classIdsArray = [(data as any).classIds];
         }
 
         const convertedData = {

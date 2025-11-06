@@ -39,17 +39,31 @@ const StudentsPage: React.FC = () => {
     fetchClasses();
   }, [fetchStudents, fetchClasses]);
 
+  // Debug form changes
+  useEffect(() => {
+    console.log('Student form updated:', studentForm);
+  }, [studentForm]);
+
   // Handle form input changes
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
-    setStudentForm({ ...studentForm, [name]: value });
+    setStudentForm(prev => {
+      const updatedForm = { ...prev, [name]: value };
+      console.log('Updated form with input change:', updatedForm);
+      return updatedForm;
+    });
   };
 
   // Handle multi-select change
   const handleMultiSelectChange = (selectedClassIds: string[]) => {
-    setStudentForm({ ...studentForm, classIds: selectedClassIds });
+    console.log('Selected class IDs:', selectedClassIds);
+    setStudentForm(prev => {
+      const updatedForm = { ...prev, classIds: selectedClassIds };
+      console.log('Updated form with class IDs:', updatedForm);
+      return updatedForm;
+    });
   };
 
   // Open modal for adding a new student
@@ -84,11 +98,12 @@ const StudentsPage: React.FC = () => {
 
   // Handle form submission
   const handleSubmit = async () => {
+    console.log('Form data being submitted:', studentForm);
     if (
       studentForm.name &&
       studentForm.rollNumber &&
       studentForm.email &&
-      (studentForm.classIds?.length > 0 || studentForm.classId)
+      studentForm.classIds?.length > 0
     ) {
       try {
         if (isEditing) {
@@ -103,12 +118,13 @@ const StudentsPage: React.FC = () => {
         await fetchClasses();
         setIsModalOpen(false);
       } catch (err: any) {
+        console.error('Error submitting form:', err);
         setLocalError(
           err.message || `Failed to ${isEditing ? 'update' : 'add'} student`
         );
       }
     } else {
-      setLocalError('Please fill all fields');
+      setLocalError('Please fill all fields and select at least one class');
     }
   };
 
@@ -316,6 +332,10 @@ const StudentsPage: React.FC = () => {
                 onChange={handleMultiSelectChange}
                 placeholder="Select classes"
               />
+              {/* Debug info */}
+              <div className="text-xs text-gray-500 mt-1">
+                Selected: {studentForm.classIds?.length || 0} classes
+              </div>
             </div>
           </div>
           <div className="mt-6 flex justify-end space-x-3">
@@ -342,16 +362,35 @@ const MultiSelect: React.FC<{
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.multiselect-container')) {
+          setIsOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const filteredOptions = options.filter(option =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleToggle = (value: string) => {
+    let newSelectedValues: string[];
     if (selectedValues.includes(value)) {
-      onChange(selectedValues.filter(v => v !== value));
+      newSelectedValues = selectedValues.filter(v => v !== value);
     } else {
-      onChange([...selectedValues, value]);
+      newSelectedValues = [...selectedValues, value];
     }
+    onChange(newSelectedValues);
   };
 
   const selectedLabels = options
@@ -360,7 +399,7 @@ const MultiSelect: React.FC<{
     .join(', ');
 
   return (
-    <div className="relative">
+    <div className="relative multiselect-container">
       <div
         className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
@@ -368,8 +407,8 @@ const MultiSelect: React.FC<{
         {selectedLabels || <span className="text-gray-400">{placeholder}</span>}
       </div>
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200">
-          <div className="px-2 py-1">
+        <div className="absolute z-10 mt-1 w-full bg-white shadow-lg rounded-md py-1 border border-gray-200 max-h-60 overflow-hidden">
+          <div className="px-2 py-1 sticky top-0 bg-white border-b border-gray-200">
             <input
               type="text"
               placeholder="Search..."
@@ -379,28 +418,37 @@ const MultiSelect: React.FC<{
               onClick={e => e.stopPropagation()}
             />
           </div>
-          <div className="max-h-60 overflow-y-auto">
-            {filteredOptions.map(option => (
-              <div
-                key={option.value}
-                className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${
-                  selectedValues.includes(option.value) ? 'bg-blue-50' : ''
-                }`}
-                onClick={() => handleToggle(option.value)}
-              >
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={selectedValues.includes(option.value)}
-                    onChange={() => {}}
-                    className="mr-2"
-                  />
-                  {option.label}
-                </label>
+          <div className="max-h-48 overflow-y-auto">
+            {filteredOptions.length > 0 ? (
+              filteredOptions.map(option => (
+                <div
+                  key={option.value}
+                  className={`px-4 py-2 cursor-pointer hover:bg-gray-100 ${
+                    selectedValues.includes(option.value) ? 'bg-blue-50' : ''
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggle(option.value);
+                  }}
+                >
+                  <label className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={selectedValues.includes(option.value)}
+                      onChange={() => {}}
+                      className="mr-2 cursor-pointer"
+                    />
+                    {option.label}
+                  </label>
+                </div>
+              ))
+            ) : (
+              <div className="px-4 py-2 text-gray-500 text-center">
+                No options found
               </div>
-            ))}
+            )}
           </div>
-          <div className="px-4 py-2 text-sm text-gray-500 border-t border-gray-200">
+          <div className="px-4 py-2 text-sm text-gray-500 border-t border-gray-200 sticky bottom-0 bg-white">
             {selectedValues.length} selected
           </div>
         </div>
