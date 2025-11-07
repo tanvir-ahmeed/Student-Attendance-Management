@@ -309,6 +309,84 @@ const DashboardPage: React.FC = () => {
     );
   }
 
+  // Export report functionality
+  const exportReport = () => {
+    try {
+      // Create CSV content
+      let csvContent = 'Attendance Report\n\n';
+      
+      // Add filter information
+      const selectedClass = classes.find(c => c.id === selectedClassId);
+      csvContent += `Class: ${selectedClass ? selectedClass.name : 'All Classes'}\n`;
+      csvContent += `Time Range: ${selectedTimeRange}\n`;
+      csvContent += `Report Generated: ${new Date().toLocaleString()}\n\n`;
+      
+      // Overall Statistics
+      csvContent += 'Overall Statistics\n';
+      csvContent += 'Metric,Value\n';
+      csvContent += `Total Students,${overallStats.totalStudents}\n`;
+      csvContent += `Total Classes,${overallStats.totalClasses}\n`;
+      csvContent += `Total Attendance Records,${overallStats.totalAttendanceRecords}\n`;
+      csvContent += `Overall Attendance Rate,${overallStats.overallAttendanceRate}%\n`;
+      csvContent += `Average Class Attendance Rate,${overallStats.avgClassAttendanceRate}%\n\n`;
+      
+      // Attendance Trend Data
+      csvContent += 'Attendance Trend\n';
+      csvContent += 'Date,Attendance Rate (%),Present,Total\n';
+      attendanceTrendData.forEach(data => {
+        csvContent += `${data.date},${data.percentage},${data.present},${data.total}\n`;
+      });
+      csvContent += '\n';
+      
+      // Class Performance Data
+      csvContent += 'Class Performance\n';
+      csvContent += 'Class,Attendance Rate (%),Present,Total\n';
+      classPerformanceData.forEach(data => {
+        csvContent += `${data.name},${data.attendanceRate},${data.present},${data.total}\n`;
+      });
+      csvContent += '\n';
+      
+      // Top Students Data
+      csvContent += 'Top Performing Students\n';
+      csvContent += 'Student,Attendance Rate (%),Present,Total\n';
+      topStudentsData.forEach(data => {
+        csvContent += `${data.name},${data.attendanceRate},${data.present},${data.total}\n`;
+      });
+      csvContent += '\n';
+      
+      // Class Distribution Data
+      csvContent += 'Class Distribution\n';
+      csvContent += 'Class,Number of Students\n';
+      classDistributionData.forEach(data => {
+        csvContent += `${data.name},${data.value}\n`;
+      });
+      csvContent += '\n';
+      
+      // Recent Activity
+      csvContent += 'Recent Activity\n';
+      csvContent += 'Action,Description,Time\n';
+      recentActivity.forEach(activity => {
+        csvContent += `"${activity.action}","${activity.description}","${activity.time}"\n`;
+      });
+      
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `attendance-report-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      console.log('Report exported successfully');
+    } catch (error) {
+      console.error('Error exporting report:', error);
+      alert('Failed to export report. Please try again.');
+    }
+  };
+
   return (
     <PageLayout
       title="Analytics Dashboard"
@@ -325,7 +403,7 @@ const DashboardPage: React.FC = () => {
           <Button 
             variant="secondary" 
             size="md"
-            onClick={() => console.log('Export Report clicked')}
+            onClick={exportReport}
           >
             Export Report
           </Button>
