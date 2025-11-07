@@ -116,10 +116,18 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
         const convertedData = data.map(s => {
           // Handle classIds - should be array of strings
           let classIds: string[] = [];
-          if ((s as any).classIds && Array.isArray((s as any).classIds)) {
-            classIds = (s as any).classIds.map((cls: any) => String(cls));
-          } else if ((s as any).classIds && typeof (s as any).classIds === 'string') {
-            classIds = [(s as any).classIds];
+          
+          // If we're fetching for a specific class, the API returns student objects
+          // directly without classIds field, so we need to add it
+          if (classId) {
+            classIds = [classId];
+          } else {
+            // When fetching all students, they should have classIds field
+            if ((s as any).classIds && Array.isArray((s as any).classIds)) {
+              classIds = (s as any).classIds.map((cls: any) => String(cls));
+            } else if ((s as any).classIds && typeof (s as any).classIds === 'string') {
+              classIds = [(s as any).classIds];
+            }
           }
 
           return {

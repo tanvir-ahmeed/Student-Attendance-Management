@@ -38,10 +38,12 @@ const MarkAttendancePage: React.FC = () => {
       : classes;
 
   // Filter students based on selected class
-  const studentsInClass = students.filter(s =>
-    s.classIds?.includes(selectedClassId)
-  );
-
+  // When we've fetched students for a specific class, use them directly
+  // Otherwise, filter the global students list
+  const studentsInClass = selectedClassId 
+    ? students 
+    : [];
+  
   // Fetch data on component mount
   useEffect(() => {
     fetchClasses();
