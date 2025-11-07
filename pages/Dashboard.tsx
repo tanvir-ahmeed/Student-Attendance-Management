@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useData } from '../contexts/DataContext';
+import { useNavigate } from 'react-router-dom';
 import {
   UsersIcon,
   SchoolIcon,
@@ -40,6 +41,8 @@ const DashboardPage: React.FC = () => {
     loading,
     error,
   } = useData();
+  
+  const navigate = useNavigate();
 
   const [selectedClassId, setSelectedClassId] = useState<string>('');
   const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
@@ -312,13 +315,25 @@ const DashboardPage: React.FC = () => {
       subtitle="Comprehensive attendance insights and performance metrics"
       actions={
         <div className="flex space-x-3">
-          <Button variant="primary" size="md">
+          <Button 
+            variant="primary" 
+            size="md"
+            onClick={() => navigate('/attendance/mark')}
+          >
             Mark Attendance
           </Button>
-          <Button variant="secondary" size="md">
+          <Button 
+            variant="secondary" 
+            size="md"
+            onClick={() => console.log('Export Report clicked')}
+          >
             Export Report
           </Button>
-          <Button variant="outline" size="md">
+          <Button 
+            variant="outline" 
+            size="md"
+            onClick={() => navigate('/students')}
+          >
             Add Student
           </Button>
         </div>
